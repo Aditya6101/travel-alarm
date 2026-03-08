@@ -1,50 +1,143 @@
-# Welcome to your Expo app 👋
+# Travel Alarm
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Travel Alarm is a native Expo app that helps a traveler track their live location, set a destination, and get alerted before reaching their stop.
 
-## Get started
+## Stack
 
-1. Install dependencies
+- Expo SDK 54
+- Expo Router
+- React Native
+- TypeScript
+- `expo-location`
+- `expo-notifications`
+- `react-native-maps`
 
-   ```bash
-   npm install
-   ```
+## Current Features
 
-2. Start the app
+- Single-screen native experience
+- Live foreground location tracking
+- Destination search using geocoding
+- Destination pin placement by tapping the map
+- Distance calculation between current location and destination
+- Preset alert-radius chips
+- Local notification alerts when entering the selected radius
+- Temporary 5-minute alert pause
+- Reset flow for destination and alert state
+- Native map support on iOS and Android
+- Web fallback placeholder instead of a live map
 
-   ```bash
-   npx expo start
-   ```
+## Project Structure
 
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
+```text
+travel-alarm/
+├── app/
+│   ├── _layout.tsx
+│   └── index.tsx
+├── components/
+│   ├── travel-alarm-screen.tsx
+│   ├── travel-map.native.tsx
+│   └── travel-map.tsx
+├── constants/
+│   ├── app-palette.ts
+│   └── theme.ts
+├── hooks/
+│   ├── use-live-location.ts
+│   ├── use-notification-alerts.ts
+│   └── use-color-scheme.ts
+├── utils/
+│   └── location.ts
+├── assets/
+│   └── images/
+├── app.json
+├── package.json
+└── README.md
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## How It Works
 
-## Learn more
+### App flow
+1. Expo Router loads `app/_layout.tsx`.
+2. The app renders `app/index.tsx`.
+3. `TravelAlarmScreen` requests location and notification permissions.
+4. Live location tracking starts once permission is granted.
+5. The user sets a destination by search or by tapping the map.
+6. The app calculates distance continuously and sends an alert when the user enters the selected radius.
 
-To learn more about developing your project with Expo, look at the following resources:
+### Location tracking
+- Uses `expo-location`
+- Requests foreground permission
+- Fetches an initial position
+- Starts `Location.watchPositionAsync()` with high accuracy
+- Updates the user location while the app remains active
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+### Destination selection
+- Search uses `Location.geocodeAsync()`
+- The first geocoding result becomes the active destination
+- Tapping the map drops or moves the destination pin
 
-## Join the community
+### Alert behavior
+A local notification is sent only when:
+- a destination exists
+- a live user location exists
+- notifications are enabled
+- notification permission is granted
+- alerts are not paused
+- the user is inside the selected distance radius
+- at least 30 seconds have passed since the previous alert
 
-Join our community of developers creating universal apps.
+### Pause mode
+- The user can pause alerts for 5 minutes
+- A countdown is shown while alerts are paused
+- Alerts resume automatically when the timer expires
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+## Design Direction
+
+- Single focused screen instead of tabs
+- Search-first destination workflow
+- Warm paper-toned background with a dark hero card
+- Compact distance chips for one-handed use
+- Clear status sections for trip progress and alert state
+
+## Configuration
+
+### Permissions
+Configured in `app.json`:
+
+#### iOS
+- `NSLocationWhenInUseUsageDescription`
+- `NSUserNotificationsUsageDescription`
+
+#### Android
+- `ACCESS_COARSE_LOCATION`
+- `ACCESS_FINE_LOCATION`
+- `POST_NOTIFICATIONS`
+
+### Expo plugins
+- `expo-router`
+- `expo-location`
+- `expo-notifications`
+- `expo-splash-screen`
+
+## Run Locally
+
+Install dependencies if needed:
+
+```powershell
+C:\Program Files\nodejs\npm.cmd install
+```
+
+Start the Expo app:
+
+```powershell
+.\node_modules\.bin\expo.cmd start
+```
+
+## Validation
+
+Completed locally in this workspace:
+
+- `expo lint`
+- `tsc --noEmit`
+
+
+
