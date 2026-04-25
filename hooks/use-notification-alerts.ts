@@ -1,16 +1,11 @@
-import * as Notifications from 'expo-notifications';
-import { useEffect, useState } from 'react';
+import Constants from 'expo-constants';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Platform } from 'react-native';
 
 import { formatDistance } from '@/utils/location';
 
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldPlaySound: true,
-    shouldSetBadge: false,
-    shouldShowBanner: true,
-    shouldShowList: true,
-  }),
-});
+let notificationHandlerRegistered = false;
+type NotificationsModule = typeof import('expo-notifications');
 
 type AlertPayload = {
   distanceKm: number;
@@ -19,14 +14,44 @@ type AlertPayload = {
 
 export function useNotificationAlerts() {
   const [notificationsGranted, setNotificationsGranted] = useState(false);
+  const isAndroidExpoGo = Platform.OS === 'android' && Constants.appOwnership === 'expo';
+  const notificationsModuleRef = useRef<NotificationsModule | null>(null);
 
   useEffect(() => {
     let mounted = true;
 
     async function requestPermission() {
-      const settings = await Notifications.requestPermissionsAsync();
-      if (mounted) {
-        setNotificationsGranted(settings.status === 'granted');
+      if (isAndroidExpoGo) {
+        if (mounted) {
+          setNotificationsGranted(false);
+        }
+        return;
+      }
+
+      const Notifications = await import('expo-notifications');
+      notificationsModuleRef.current = Notifications;
+
+      if (!notificationHandlerRegistered) {
+        Notifications.setNotificationHandler({
+          handleNotification: async () => ({
+            shouldPlaySound: true,
+            shouldSetBadge: false,
+            shouldShowBanner: true,
+            shouldShowList: true,
+          }),
+        });
+        notificationHandlerRegistered = true;
+      }
+
+      try {
+        const settings = await Notifications.requestPermissionsAsync();
+        if (mounted) {
+          setNotificationsGranted(settings.status === 'granted');
+        }
+      } catch {
+        if (mounted) {
+          setNotificationsGranted(false);
+        }
       }
     }
 
@@ -35,14 +60,14 @@ export function useNotificationAlerts() {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [isAndroidExpoGo]);
 
-  async function sendDestinationAlert({ distanceKm, distanceMeters }: AlertPayload) {
-    if (!notificationsGranted) {
+  const sendDestinationAlert = useCallback(async ({ distanceKm, distanceMeters }: AlertPayload) => {
+    if (!notificationsGranted || isAndroidExpoGo || !notificationsModuleRef.current) {
       return;
     }
 
-    await Notifications.scheduleNotificationAsync({
+    await notificationsModuleRef.current.scheduleNotificationAsync({
       content: {
         title: 'Approaching your stop',
         body: `You are ${formatDistance(distanceMeters)} away. Your ${distanceKm} km alarm is active.`,
@@ -50,7 +75,7 @@ export function useNotificationAlerts() {
       },
       trigger: null,
     });
-  }
+  }, [isAndroidExpoGo, notificationsGranted]);
 
   return { notificationsGranted, sendDestinationAlert };
 }

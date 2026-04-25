@@ -294,10 +294,13 @@ export function TravelAlarmScreen() {
 
           {locationError ? <Text style={styles.inlineError}>{locationError}</Text> : null}
           {!notificationsGranted ? (
-            <Text style={styles.helperText}>
-              Notifications are unavailable right now, so the app can still track distance but will
-              not raise alarms.
-            </Text>
+            <View style={styles.warningBanner}>
+              <Text style={styles.warningTitle}>Notifications unavailable</Text>
+              <Text style={styles.warningText}>
+                Notifications are unavailable right now, so the app can still track distance but
+                will not raise alarms.
+              </Text>
+            </View>
           ) : null}
           {permissionStatus !== 'granted' && !isLoading ? (
             <Text style={styles.helperText}>
@@ -588,6 +591,25 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     lineHeight: 20,
+  },
+  warningBanner: {
+    backgroundColor: AppPalette.warningSoft,
+    borderColor: AppPalette.warning,
+    borderRadius: 16,
+    borderWidth: 1,
+    gap: 4,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  warningTitle: {
+    color: AppPalette.text,
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  warningText: {
+    color: AppPalette.text,
+    fontSize: 13,
+    lineHeight: 18,
   },
   buttonPressed: {
     opacity: 0.84,
